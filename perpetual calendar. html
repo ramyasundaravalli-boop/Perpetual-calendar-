@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perpetual Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .calendar-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .select-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .select-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        select {
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        select:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 5px 20px rgba(118, 75, 162, 0.2);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .nav-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn:active {
+            transform: translateY(0);
+        }
+
+        .today-btn {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+        }
+
+        .calendar {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .month-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .month-header h2 {
+            font-size: 2.2em;
+            color: #333;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .weekday {
+            text-align: center;
+            padding: 15px 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+
+        .weekday.sunday {
+            color: #dc2626;
+            background: linear-gradient(135deg, #fef2f2, #fecaca);
+        }
+
+        .weekday.saturday {
+            color: #16a34a;
+            background: linear-gradient(135deg, #f0fdf4, #bbf7d0);
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .day {
+            text-align: center;
+            padding: 18px 5px;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            background: linear-gradient(135deg, #f9fafb, #e5e7eb);
+        }
+
+        .day:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .day.other-month {
+            color: #9ca3af;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            opacity: 0.6;
+        }
+
+        .day.sunday {
+            color: #dc2626;
+            background: linear-gradient(135deg, #fef2f2, #fecaca);
+        }
+
+        .day.saturday {
+            color: #16a34a;
+            background: linear-gradient(135deg, #f0fdf4, #bbf7d0);
+        }
+
+        .day.today {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .day-number {
+            font-size: 1.1em;
+        }
+
+        .moon-phase {
+            font-size: 0.7em;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #666;
+        }
+
+        .holiday-indicator {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 6px;
+            height: 6px;
+            background: #f5576c;
+            border-radius: 50%;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-container {
+                padding: 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            select {
+                min-width: 200px;
+            }
+            
+            .navigation {
+                flex-wrap: wrap;
+            }
+            
+            .day {
+                padding: 12px 2px;
+            }
+            
+            .day-number {
+                font-size: 0.9em;
+            }
+        }
+
+        .empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="header">
+            <h1>📅 Perpetual Calendar</h1>
+            <p>Navigate through any month and year</p>
+        </div>
+
+        <div class="controls">
+            <div class="select-group">
+                <label for="month-select">Month</label>
+                <select id="month-select">
+                    <option value="0">January</option>
+                    <option value="1">February</option>
+                    <option value="2">March</option>
+                    <option value="3">April</option>
+                    <option value="4">May</option>
+                    <option value="5">June</option>
+                    <option value="6">July</option>
+                    <option value="7">August</option>
+                    <option value="8">September</option>
+                    <option value="9">October</option>
+                    <option value="10">November</option>
+                    <option value="11">December</option>
+                </select>
+            </div>
+            
+            <div class="select-group">
+                <label for="year-select">Year</label>
+                <select id="year-select">
+                    <!-- Years will be populated by JavaScript -->
+                </select>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-btn prev-year">« Year</button>
+            <button class="nav-btn prev-month">« Month</button>
+            <button class="nav-btn today-btn">Today</button>
+            <button class="nav-btn next-month">Month »</button>
+            <button class="nav-btn next-year">Year »</button>
+        </div>
+
+        <div class="calendar">
+            <div class="month-header">
+                <h2 id="current-month-year">January 2024</h2>
+            </div>
+            
+            <div class="weekdays">
+                <div class="weekday sunday">Sun</div>
+                <div class="weekday">Mon</div>
+                <div class="weekday">Tue</div>
+                <div class="weekday">Wed</div>
+                <div class="weekday">Thu</div>
+                <div class="weekday">Fri</div>
+                <div class="weekday saturday">Sat</div>
+            </div>
+            
+            <div class="days" id="calendar-days">
+                <!-- Calendar days will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>✨ Perpetual Calendar - Works for any date from 1900 to 2100 ✨</p>
+            <p><small>Click on dates for details • Today's date is highlighted</small></p>
+        </div>
+    </div>
+
+    <script>
+        class PerpetualCalendar {
+            constructor() {
+                this.currentDate = new Date();
+                this.months = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+                
+                this.initializeSelects();
+                this.renderCalendar();
+                this.setupEventListeners();
+            }
+
+            initializeSelects() {
+                const monthSelect = document.getElementById('month-select');
+                const yearSelect = document.getElementById('year-select');
+                
+                // Set current month and year
+                monthSelect.value = this.currentDate.getMonth();
+                
+                // Populate years (1900-2100)
+                for (let year = 1900; year <= 2100; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    yearSelect.appendChild(option);
+                }
+                
+                yearSelect.value = this.currentDate.getFullYear();
+            }
+
+            getDaysInMonth(year, month) {
+                return new Date(year, month + 1, 0).getDate();
+            }
+
+            getFirstDayOfMonth(year, month) {
+                return new Date(year, month, 1).getDay();
+            }
+
+            isToday(year, month, day) {
+                const today = new Date();
+                return today.getFullYear() === year && 
+                       today.getMonth() === month && 
+                       today.getDate() === day;
+            }
+
+            isHoliday(year, month, day) {
+                // Simple holiday detection (you can expand this)
+                const date = new Date(year, month, day);
+                
+                // New Year's Day
+                if (month === 0 && day === 1) return "New Year's Day";
+                
+                // Valentine's Day
+                if (month === 1 && day === 14) return "Valentine's Day";
+                
+                // Independence Day (US)
+                if (month === 6 && day === 4) return "Independence Day";
+                
+                // Christmas
+                if (month === 11 && day === 25) return "Christmas Day";
+                
+                return null;
+            }
+
+            getMoonPhase(day) {
+                // Simple moon phase calculation based on day of month
+                const phases = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
+                return phases[day % 8];
+            }
+
+            renderCalendar() {
+                const year = parseInt(document.getElementById('year-select').value);
+                const month = parseInt(document.getElementById('month-select').value);
+                
+                // Update header
+                document.getElementById('current-month-year').textContent = 
+                    `${this.months[month]} ${year}`;
+                
+                const daysContainer = document.getElementById('calendar-days');
+                daysContainer.innerHTML = '';
+                
+                const daysInMonth = this.getDaysInMonth(year, month);
+                const firstDay = this.getFirstDayOfMonth(year, month);
+                
+                // Add empty cells for days before the first day of the month
+                for (let i = 0; i < firstDay; i++) {
+                    const prevMonth = month === 0 ? 11 : month - 1;
+                    const prevYear = month === 0 ? year - 1 : year;
+                    const daysInPrevMonth = this.getDaysInMonth(prevYear, prevMonth);
+                    const day = daysInPrevMonth - firstDay + i + 1;
+                    
+                    const dayElement = this.createDayElement(day, prevYear, prevMonth, true);
+                    daysContainer.appendChild(dayElement);
+                }
+                
+                // Add days of current month
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = this.createDayElement(day, year, month, false);
+                    daysContainer.appendChild(dayElement);
+                }
+                
+                // Add empty cells for days after the last day of the month
+                const totalCells = 42; // 6 rows × 7 days
+                const remainingCells = totalCells - (firstDay + daysInMonth);
+                
+                for (let i = 0; i < remainingCells; i++) {
+                    const nextMonth = month === 11 ? 0 : month + 1;
+                    const nextYear = month === 11 ? year + 1 : year;
+                    const day = i + 1;
+                    
+                    const dayElement = this.createDayElement(day, nextYear, nextMonth, true);
+                    daysContainer.appendChild(dayElement);
+                }
+            }
+
+            createDayElement(day, year, month, isOtherMonth) {
+                const dayElement = document.createElement('div');
+                dayElement.className = `day ${isOtherMonth ? 'other-month' : ''}`;
+                
+                // Add day of week class
+                const dayOfWeek = new Date(year, month, day).getDay();
+                if (dayOfWeek === 0) dayElement.classList.add('sunday');
+                if (dayOfWeek === 6) dayElement.classList.add('saturday');
+                
+                // Check if today
+                if (!isOtherMonth && this.isToday(year, month, day)) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Check for holiday
+                const holiday = this.isHoliday(year, month, day);
+                if (holiday && !isOtherMonth) {
+                    const holidayIndicator = document.createElement('div');
+                    holidayIndicator.className = 'holiday-indicator';
+                    holidayIndicator.title = holiday;
+                    dayElement.appendChild(holidayIndicator);
+                }
+                
+                const dayNumber = document.createElement('div');
+                dayNumber.className = 'day-number';
+                dayNumber.textContent = day;
+                dayElement.appendChild(dayNumber);
+                
+                // Add moon phase for fun (on some days)
+                if (day % 7 === 0 && !isOtherMonth) {
+                    const moonPhase = document.createElement('div');
+                    moonPhase.className = 'moon-phase';
+                    moonPhase.textContent = this.getMoonPhase(day);
+                    dayElement.appendChild(moonPhase);
+                }
+                
+                // Add click event
+                dayElement.addEventListener('click', () => {
+                    this.showDateDetails(year, month, day, holiday);
+                });
+                
+                return dayElement;
+            }
+
+            showDateDetails(year, month, day, holiday) {
+                const date = new Date(year, month, day);
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                const formattedDate = date.toLocaleDateString('en-US', options);
+                
+                let message = `📅 ${formattedDate}`;
+                if (holiday) {
+                    message += `\n🎉 ${holiday}`;
+                }
+                
+                // You can replace this with a more sophisticated modal
+                alert(message);
+            }
+
+            navigateMonth(direction) {
+                let month = parseInt(document.getElementById('month-select').value);
+                let year = parseInt(document.getElementById('year-select').value);
+                
+                month += direction;
+                
+                if (month < 0) {
+                    month = 11;
+                    year--;
+                } else if (month > 11) {
+                    month = 0;
+                    year++;
+                }
+                
+                document.getElementById('month-select').value = month;
+                document.getElementById('year-select').value = year;
+                this.renderCalendar();
+            }
+
+            navigateYear(direction) {
+                let year = parseInt(document.getElementById('year-select').value);
+                year += direction;
+                
+                // Keep within reasonable bounds
+                if (year >= 1900 && year <= 2100) {
+                    document.getElementById('year-select').value = year;
+                    this.renderCalendar();
+                }
+            }
+
+            goToToday() {
+                this.currentDate = new Date();
+                document.getElementById('month-select').value = this.currentDate.getMonth();
+                document.getElementById('year-select').value = this.currentDate.getFullYear();
+                this.renderCalendar();
+            }
+
+            setupEventListeners() {
+                // Month and year select changes
+                document.getElementById('month-select').addEventListener('change', () => {
+                    this.renderCalendar();
+                });
+                
+                document.getElementById('year-select').addEventListener('change', () => {
+                    this.renderCalendar();
+                });
+                
+                // Navigation buttons
+                document.querySelector('.prev-year').addEventListener('click', () => {
+                    this.navigateYear(-1);
+                });
+                
+                document.querySelector('.prev-month').addEventListener('click', () => {
+                    this.navigateMonth(-1);
+                });
+                
+                document.querySelector('.today-btn').addEventListener('click', () => {
+                    this.goToToday();
+                });
+                
+                document.querySelector('.next-month').addEventListener('click', () => {
+                    this.navigateMonth(1);
+                });
+                
+                document.querySelector('.next-year').addEventListener('click', () => {
+                    this.navigateYear(1);
+                });
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case 'ArrowLeft':
+                            e.preventDefault();
+                            this.navigateMonth(-1);
+                            break;
+                        case 'ArrowRight':
+                            e.preventDefault();
+                            this.navigateMonth(1);
+                            break;
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            this.navigateYear(-1);
+                            break;
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            this.navigateYear(1);
+                            break;
+                        case 't':
+                        case 'T':
+                            if (e.ctrlKey) {
+                                e.preventDefault();
+                                this.goToToday();
+                            }
+                            break;
+                    }
+                });
+            }
+        }
+
+        // Initialize the calendar when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new PerpetualCalendar();
+        });
+    </script>
+</body>
+</html>
